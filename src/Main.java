@@ -1,5 +1,6 @@
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+        XMLParsing myParser = new XMLParsing();
+        myParser.extract_data("alarm_net.xml");
     }
 }

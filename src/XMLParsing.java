@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class XMLParsing {
 
-    void extract_data(String path){
+    void extract_data(String path, Network created_network){
         System.out.println(path);
         try {
             File file = new File(path);
@@ -21,14 +21,14 @@ public class XMLParsing {
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document document = db.parse(file);
             document.getDocumentElement().normalize();
-            System.out.println(document);
-
-            System.out.println("Root element :" + document.getDocumentElement().getNodeName());
             // Extract nodes
-            extract_variables("VARIABLE", document);
+            extract_variables("VARIABLE", document, created_network);
 
             // Extracting CPTS
-            extract_CPT("DEFINITION", document);
+            extract_CPT("DEFINITION", document, created_network);
+
+            // updating the network graph for parents, child relation
+            created_network.Update_childs();
 
         } catch(ParserConfigurationException e){
             throw new RuntimeException(e);
@@ -39,61 +39,56 @@ public class XMLParsing {
         }
     }
 
-    void extract_variables(String TagName, Document document){
+    void extract_variables(String TagName, Document document, Network created_network){
         // Extracting variables
         NodeList nList = document.getElementsByTagName(TagName);
-        System.out.println("----------------------------");
         for (int i = 0; i < nList.getLength(); i++) {
             Node nNode = nList.item(i);
-            System.out.println("\nCurrent Element :" + nNode.getNodeName());
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element eElement = (Element) nNode;
-                System.out.println("Name : "
-                        + eElement.getElementsByTagName("NAME")
-                        .item(0).getTextContent());
-                System.out.println("Outcome 1 : "
-                        + eElement.getElementsByTagName("OUTCOME")
-                        .item(0).getTextContent());
-                System.out.println("Outcome 2 : "
-                        + eElement.getElementsByTagName("OUTCOME")
-                        .item(1).getTextContent());
-            }
-        }
-    }
 
-    CPT extract_CPT(String TagName, Document document){
+                NetNode created_node = new NetNode(
+                        eElement.getElementsByTagName("NAME").item(0).getTextContent());
+                created_network.nodes.add(created_node); // Adding a node to the network
 
-        NodeList nList = document.getElementsByTagName(TagName); // extracting the tag <TAGNAME>
-        System.out.println("\n\n----------------------------");
-        for (int i = 0; i < nList.getLength(); i++) {
-            Node nNode = nList.item(i);
-            System.out.println("\nCurrent Element :" + nNode.getNodeName());
-            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                Element eElement = (Element) nNode;
-                System.out.println("FOR : "
-                        + eElement.getElementsByTagName("FOR")
-                        .item(0).getTextContent());
                 int j = 0;
-                try { // trying to go over all the "GIVEN" tag until we reach the end of the "GIVEN" tags
+                try { // trying to go over all the "OUTCOME" tag until we reach the end of the "GIVEN" tags
 
                     while (true){
-                        System.out.println("given : "
-                                + eElement.getElementsByTagName("GIVEN")
+                        created_node.add_outcome(eElement.getElementsByTagName("OUTCOME") // creating a new node each time
                                 .item(j).getTextContent());
                         j += 1;
                     }
                 }
-                catch (NullPointerException e){
-                    ;
+                catch (NullPointerException _){
                 }
-//                System.out.println("Table "
-//                        + 2 +"X" + (j+1) + ": "
-//                        + eElement.getElementsByTagName("TABLE")
-//                        .item(0).getTextContent());
+            }
+        }
+    }
 
-                // creating a cpt
-                new CPT(eElement.getElementsByTagName("TABLE")
-                        .item(0).getTextContent());
+    CPT extract_CPT(String TagName, Document document, Network created_network){
+
+        NodeList nList = document.getElementsByTagName(TagName); // extracting the tag <TAGNAME>
+        for (int i = 0; i < nList.getLength(); i++) {
+            Node nNode = nList.item(i);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
+                NetNode current_node = created_network.find_node(eElement.getElementsByTagName("FOR").item(0).getTextContent());
+                int j = 0;
+                try { // trying to go over all the "GIVEN" tag until we reach the end of the "GIVEN" tags
+
+                    while (true){
+                        // getting all the parents of a node
+                        current_node.Parents.add(created_network.find_node(eElement.getElementsByTagName("GIVEN").item(j).getTextContent()));
+                        j++;
+                    }
+                }
+                catch (NullPointerException _){
+                }
+                // CPT values extraction
+                current_node.CPT.extracting_values_from_String(
+                        eElement.getElementsByTagName("TABLE").item(0).getTextContent()
+                );
             }
         }
         return null;

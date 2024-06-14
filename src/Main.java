@@ -1,8 +1,10 @@
 import java.io.*;
 public class Main {
     public static void main(String[] args) {
-        String input_path = "input.txt";
+        String input_path = "my_input.txt";
         String output_path = "my_output.txt";
+        BayesBall myBayesBall = new BayesBall();
+        VariableElimination myVariableElimination= new VariableElimination();
 
         // Clearing the output file
         clearFile(output_path);
@@ -14,7 +16,7 @@ public class Main {
 
         // Extracting all the data and creating the graph with the CPT values
         myParser.extract_data(xml_path, My_network);
-        My_network.Print_Network();
+//        My_network.Print_Network();
 
         // Processing the queries
         String query = " ";
@@ -28,10 +30,12 @@ public class Main {
 
             if (query.charAt(0) == 'P') {
                 // Applying variable elimination
+                myVariableElimination.Call(My_network, query);
+
                 output = "";
             } else {
                 // Applying Bayse's ball algorithm
-                bayes_ball_output = My_network.BayesBall(query);
+                bayes_ball_output = myBayesBall.Call(My_network, query);
                 if (bayes_ball_output) {
                     output = "no";
                 } else {

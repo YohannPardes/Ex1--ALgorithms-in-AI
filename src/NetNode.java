@@ -5,6 +5,7 @@ public class NetNode {
     boolean relevant = true;
     boolean given = false;
     boolean BB_visited = false;
+    String Given_outcome = "";
     String name;
     CPT CPT = new CPT();
     ArrayList<NetNode> Parents = new ArrayList<>();
@@ -49,5 +50,18 @@ public class NetNode {
                 parent.Childs.add(this);
             }
         }
+    }
+
+    public void collapse_given(){
+        // deleting useless values
+        System.out.println("hhahahahahah" + this.Given_outcome); // todo - fix the given outcome string
+        int modulo = this.outcomes.get(this.Given_outcome);
+        ArrayList<Float> new_values = new ArrayList<>();
+        for (int i = 0; i < this.CPT.computed_values.length;i++){
+            if (i % this.nb_outcomes == modulo){
+                new_values.add(this.CPT.computed_values[i]);
+            }
+        }
+        this.CPT.computed_values = new_values.toArray(new Float[0]);
     }
 }

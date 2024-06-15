@@ -44,7 +44,6 @@ public class Main {
             }
 
             writeToFile(output_path, output);
-            My_network.ResetNetwork();
             i++; // incrementing to the next query
 
 

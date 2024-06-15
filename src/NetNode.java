@@ -22,8 +22,6 @@ public class NetNode {
         this.nb_outcomes += 1;
     }
 
-
-
     @Override
     public String toString(){
         System.out.println("Node name :" + this.name);
@@ -54,7 +52,6 @@ public class NetNode {
 
     public void collapse_given(){
         // deleting useless values
-        System.out.println("hhahahahahah" + this.Given_outcome); // todo - fix the given outcome string
         int modulo = this.outcomes.get(this.Given_outcome);
         ArrayList<Float> new_values = new ArrayList<>();
         for (int i = 0; i < this.CPT.computed_values.length;i++){

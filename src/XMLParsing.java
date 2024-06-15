@@ -15,6 +15,7 @@ public class XMLParsing {
 
     void extract_data(String path, Network created_network){
         System.out.println(path);
+        created_network.inputFile = path;
         try {
             File file = new File(path);
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -60,7 +61,7 @@ public class XMLParsing {
                         j += 1;
                     }
                 }
-                catch (NullPointerException _){
+                catch (NullPointerException e){
                 }
             }
         }
@@ -83,7 +84,7 @@ public class XMLParsing {
                         j++;
                     }
                 }
-                catch (NullPointerException _){
+                catch (NullPointerException e){
                 }
                 // CPT values extraction
                 current_node.CPT.extracting_values_from_String(

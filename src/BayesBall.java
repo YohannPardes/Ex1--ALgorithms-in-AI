@@ -10,7 +10,9 @@ public class BayesBall {
         // updating the node of their given state
         network.given_update(query);
 
-        return this.BayesBallRecursive(network.find_node(param1), network.find_node(param2), network.find_node(param1), true, true);
+        boolean returned_val = this.BayesBallRecursive(network.find_node(param1), network.find_node(param2), network.find_node(param1), true, true);
+        network.ResetNetwork();
+        return returned_val;
     }
 
     public boolean BayesBallRecursive(NetNode current_node, NetNode goal_node, NetNode previous_node, boolean from_parent, boolean first_call) {
@@ -22,7 +24,7 @@ public class BayesBall {
             return false;
         } else if (current_node.Parents.isEmpty() && !from_parent && !first_call) { // if we reached a leaf parent while going up
             return false;
-        } else if (current_node.BB_visited && !from_parent) { // if we already have been through this node and we are not from a parent
+        } else if (current_node.BB_visited && !from_parent) { // if we already have been through this node, and we are not from a parent
             return false;
         } else if (current_node.given && !from_parent) { // we reached a given parent from the bottom then we stop the recursion
             return false;
@@ -43,7 +45,7 @@ public class BayesBall {
             }
         }
         // Case 2 - from a child to normal parent
-        else if (!from_parent && !current_node.given || first_call) {
+        else if ((!from_parent && !current_node.given) || first_call) {
             for (NetNode parent : current_node.Parents) {
                 track = track || (this.BayesBallRecursive(parent, goal_node, current_node, false, false));
             }

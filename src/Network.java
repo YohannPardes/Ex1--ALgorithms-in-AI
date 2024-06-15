@@ -2,6 +2,7 @@ import java.util.ArrayList;
 
 public class Network {
     ArrayList<NetNode> nodes = new ArrayList<>();
+    String inputFile;
 
     Network() {
 
@@ -39,12 +40,15 @@ public class Network {
             return;
         }
         String givenPart = givenString[1];
+        givenPart = givenPart.split("\\)")[0];
         for (String given : givenPart.split(",")) {
-            if (given.equals("")) {
+            if (given.isEmpty()) {
                 break;
             }
+            System.out.println("Given part: " + given);
             String node = given.split("=")[0];
             String value = given.split("=")[1];
+            value = value.split("\\)")[0];
 
             NetNode current_node = this.find_node(node);
             current_node.given = true;
@@ -55,7 +59,11 @@ public class Network {
     public void ResetNetwork() {
         for (NetNode node : this.nodes) {
             node.BB_visited = false;
-            node.given = false;
         }
+    }
+
+    public void HardReset(XMLParsing parser){
+        parser.extract_data(this.inputFile, this);
+
     }
 }

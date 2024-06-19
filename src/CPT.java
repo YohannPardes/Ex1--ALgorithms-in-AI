@@ -3,6 +3,7 @@ import java.util.Arrays;
 public class CPT {
     Float[] values;
     Float[] computed_values;
+    Factor factor;
     /**
      * Given a string of the format "xxx xxx xx x xxx"
      * Build the right CPT

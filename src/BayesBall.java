@@ -16,52 +16,68 @@ public class BayesBall {
     }
 
     public boolean BayesBallRecursive(NetNode current_node, NetNode goal_node, NetNode previous_node, boolean from_parent, boolean first_call) {
-
+        System.out.println("current node: " + current_node.name + " goal node: " + goal_node.name + " from parent: " + from_parent + " first call: " + first_call);
         // Stopping cases
-        if (current_node == goal_node) { // if we have reached the goal
+        // If we reached the goal node
+        if (current_node == goal_node) {
             return true;
-        } else if (current_node.Childs.isEmpty() && from_parent && !current_node.given) { // if we reached a leaf child
+        }
+        // if we came from a child node into a given node
+        if (!from_parent && current_node.given) {
             return false;
-        } else if (current_node.Parents.isEmpty() && !from_parent && !first_call) { // if we reached a leaf parent while going up
+        }
+        // if we reached a leaf node
+        if (current_node.Childs.isEmpty() && from_parent && !current_node.given && !first_call) {
             return false;
-        } else if (current_node.BB_visited && !from_parent) { // if we already have been through this node, and we are not from a parent
-            return false;
-        } else if (current_node.given && !from_parent) { // we reached a given parent from the bottom then we stop the recursion
+        }
+        // if we have reached a 'root' node from a child node
+        if (!from_parent && current_node == previous_node) {
             return false;
         }
 
-        current_node.BB_visited = true; // marking the node as visited
 
-        // Case 1 - if we are going from a parent to a given child
-        boolean track = false;
-        if (from_parent && current_node.given) {
-            {
+        // recursion cases
+        boolean returned_val = false;
+        // If this is the first call
+        if (first_call) {
+            // recursion to all the parents
+            for (NetNode parent : current_node.Parents) {
+                returned_val = returned_val || this.BayesBallRecursive(parent, goal_node, current_node, false, false);
+            }
+            // recursion to all the childs
+            for (NetNode child : current_node.Childs) {
+                returned_val = returned_val || this.BayesBallRecursive(child, goal_node, current_node, true, false);
+            }
+        }
+        // If the current node is given
+        if (current_node.given) {
+            // if we came from a parent node otherwise we already returned false
+            for (NetNode parent : current_node.Parents) {
+                returned_val = returned_val || this.BayesBallRecursive(parent, goal_node, current_node, false, false);
+            }
+        }
+        // If the current node is not given
+        else {
+            // if we came from a parent node
+            if (from_parent) {
+                // we go over all the childs of the current node
                 for (NetNode child : current_node.Childs) {
-                    track = track || (this.BayesBallRecursive(child, goal_node, current_node, true, false));
+                    returned_val = returned_val || this.BayesBallRecursive(child, goal_node, current_node, true, false);
+                }
+            // if we came from a child node
+            } else {
+                for (NetNode child : current_node.Childs) {
+                    if (child == previous_node) {
+                        continue;
+                    }
+                    returned_val = returned_val || this.BayesBallRecursive(child, goal_node, current_node, true, false);
+                }
+                for (NetNode parent : current_node.Parents) {
+                    returned_val = returned_val || this.BayesBallRecursive(parent, goal_node, current_node, false, false);
                 }
             }
-            for (NetNode parent : previous_node.Parents) {
-                track = track || (this.BayesBallRecursive(parent, goal_node, current_node, false, false));
-            }
         }
-        // Case 2 - from a child to normal parent
-        else if ((!from_parent && !current_node.given) || first_call) {
-            for (NetNode parent : current_node.Parents) {
-                track = track || (this.BayesBallRecursive(parent, goal_node, current_node, false, false));
-            }
-            for (NetNode child : current_node.Childs) {
-                track = track || (this.BayesBallRecursive(child, goal_node, current_node, true, false));
-            }
-        }
-        // Case 3 - from a parent to a normal child
-        else if (from_parent && !current_node.given) {
-            for (NetNode child : current_node.Childs) {
-                track = track || (this.BayesBallRecursive(child, goal_node, current_node, true, false));
-            }
-
-        } else {
-            throw new RuntimeException("This case should not happen");
-        }
-        return track;
+        return returned_val;
     }
+
 }

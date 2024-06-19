@@ -30,6 +30,7 @@ public class XMLParsing {
 
             // updating the network graph for parents, child relation
             created_network.Update_childs();
+            created_network.create_factors();
 
         } catch(ParserConfigurationException e){
             throw new RuntimeException(e);

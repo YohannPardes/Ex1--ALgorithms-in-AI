@@ -4,10 +4,6 @@ public class Network {
     ArrayList<NetNode> nodes = new ArrayList<>();
     String inputFile;
 
-    Network() {
-
-    }
-
     public void Print_Network() {
         for (NetNode node : nodes) {
             System.out.println(node);
@@ -62,8 +58,25 @@ public class Network {
         }
     }
 
-    public void HardReset(XMLParsing parser){
-        parser.extract_data(this.inputFile, this);
+    public void HardReset(VariableElimination VE, BayesBall BB){
+        for (NetNode node : this.nodes){
+            node.given = false;
+            node.Given_outcome = "";
+            node.BB_visited = false;
+        }
 
+        for (NetNode node : this.nodes){
+            node.factor = null;
+            node.factor = new Factor(node);
+        }
+
+        VE.reset();
+
+    }
+
+    public void create_factors() {
+        for (NetNode node : this.nodes) {
+            node.factor = new Factor(node);
+        }
     }
 }

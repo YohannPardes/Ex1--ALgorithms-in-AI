@@ -1,8 +1,13 @@
 import java.io.*;
 public class Main {
     public static void main(String[] args) {
-        String input_path = "my_input.txt";
+        String input_path = "input.txt";
         String output_path = "my_output.txt";
+
+        if (args.length == 2) {
+            input_path = args[0];
+            output_path = args[1];
+        }
         BayesBall myBayesBall = new BayesBall();
         VariableElimination myVariableElimination= new VariableElimination();
 
@@ -28,27 +33,27 @@ public class Main {
             query = read_input(input_path, i);
             System.out.println("current query: " + query);
 
-            if (query.charAt(0) == 'P') {
+            if (query.substring(0, 2).equals("P(")) {
                 // Applying variable elimination
-                myVariableElimination.Call(My_network, query);
-
-                output = "";
+                float result = myVariableElimination.Call(My_network, query);
+                String StrResult = Float.toString(result) + "0000000";
+                output = StrResult.substring(0, 7) + "," + myVariableElimination.total_sum + "," + myVariableElimination.total_mult;
             } else {
                 // Applying Bayse's ball algorithm
                 bayes_ball_output = myBayesBall.Call(My_network, query);
                 if (bayes_ball_output) {
+                    System.out.println("the variables are dependent");
                     output = "no";
                 } else {
+                    System.out.println("the variables are independent");
                     output = "yes";
                 }
             }
 
+            My_network.HardReset(myVariableElimination, myBayesBall);
             writeToFile(output_path, output);
             i++; // incrementing to the next query
-
-
         }
-
     }
 
     public static String read_input(String path, int index) {
@@ -70,7 +75,6 @@ public class Main {
         } catch (IOException e) {
             System.out.println("IO error occurred: " + e.getMessage());
         }
-
         return null;
     }
 

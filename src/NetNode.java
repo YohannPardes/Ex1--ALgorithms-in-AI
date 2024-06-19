@@ -2,7 +2,6 @@ import java.util.*;
 
 public class NetNode {
 
-    boolean relevant = true;
     boolean given = false;
     boolean BB_visited = false;
     String Given_outcome = "";
@@ -12,6 +11,8 @@ public class NetNode {
     ArrayList<NetNode> Childs = new ArrayList<>();
     int nb_outcomes = 0;
     HashMap<String, Integer> outcomes = new HashMap<>();
+    Factor factor;
+    ArrayList<String> outcome_list = new ArrayList<>();
 
     public NetNode(String name){
         this.name = name;
@@ -19,6 +20,7 @@ public class NetNode {
 
     public void add_outcome(String outcome){
         outcomes.put(outcome, this.nb_outcomes);
+        this.outcome_list.add(outcome);
         this.nb_outcomes += 1;
     }
 
@@ -50,15 +52,11 @@ public class NetNode {
         }
     }
 
-    public void collapse_given(){
-        // deleting useless values
-        int modulo = this.outcomes.get(this.Given_outcome);
-        ArrayList<Float> new_values = new ArrayList<>();
-        for (int i = 0; i < this.CPT.computed_values.length;i++){
-            if (i % this.nb_outcomes == modulo){
-                new_values.add(this.CPT.computed_values[i]);
-            }
-        }
-        this.CPT.computed_values = new_values.toArray(new Float[0]);
+    public void collapse_given(NetNode node, String givenVal){
+        System.out.println("Collapsing on node :"+node.name);
+        System.out.println("Before collapsing the node :" + this.factor);
+        this.factor.updateGiven(givenVal, node);
+        System.out.println("After collapsing the node :" + this.factor);
+        System.out.println(this.factor.data.toString());
     }
 }

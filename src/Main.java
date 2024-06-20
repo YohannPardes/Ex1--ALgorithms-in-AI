@@ -36,6 +36,7 @@ public class Main {
             if (query.substring(0, 2).equals("P(")) {
                 // Applying variable elimination
                 float result = myVariableElimination.Call(My_network, query);
+                result = Math.round(result * 100000f) / 100000f;
                 String StrResult = Float.toString(result) + "0000000";
                 output = StrResult.substring(0, 7) + "," + myVariableElimination.total_sum + "," + myVariableElimination.total_mult;
             } else {

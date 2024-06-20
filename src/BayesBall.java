@@ -35,6 +35,7 @@ public class BayesBall {
             return false;
         }
 
+        current_node.BB_visited = true;
 
         // recursion cases
         boolean returned_val = false;
@@ -46,6 +47,9 @@ public class BayesBall {
             }
             // recursion to all the childs
             for (NetNode child : current_node.Childs) {
+                if (child.BB_visited){
+                    continue;
+                }
                 returned_val = returned_val || this.BayesBallRecursive(child, goal_node, current_node, true, false);
             }
         }
@@ -67,7 +71,7 @@ public class BayesBall {
             // if we came from a child node
             } else {
                 for (NetNode child : current_node.Childs) {
-                    if (child == previous_node) {
+                    if (child.BB_visited) {
                         continue;
                     }
                     returned_val = returned_val || this.BayesBallRecursive(child, goal_node, current_node, true, false);

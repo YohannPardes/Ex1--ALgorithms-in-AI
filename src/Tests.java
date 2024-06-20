@@ -20,7 +20,7 @@ public class Tests {
                 "CommonEffect.txt",
                 "Example1.txt",
                 "Example2.txt",
-                "ExerciseExample.txt",
+                "ExerciseExampleTernary.txt",
                 "MyExample.txt",
                 "UniversityExample.txt"
         };
@@ -33,14 +33,13 @@ public class Tests {
             Main.main(new String[]{input_path, my_output_path});
 
             // Compare the output of the program with the expected output (many lines)
-//            String expected_output = Main.read_input(output_path, 1);
-//            String my_output = Main.read_input(my_output_path, 1);
             try (BufferedReader reader1 = new BufferedReader(new FileReader(output_path));
                  BufferedReader reader2 = new BufferedReader(new FileReader(my_output_path))) {
                 String line1;
                 String line2;
 
                 int i = 2;
+                System.out.println(file);
                 while ((line1 = reader1.readLine()) != null && (line2 = reader2.readLine()) != null) {
                         System.out.println("Line " + i++);
                         assertEquals(line1, line2);

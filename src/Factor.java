@@ -88,7 +88,7 @@ public class Factor {
         ArrayList<String> new_key = new ArrayList<>();
         int index = this.title.indexOf(node);
         HashMap<ArrayList<String>, Float> new_data = new HashMap<>();
-        ArrayList<String> temp_key = new ArrayList<>();
+        ArrayList<String> temp_key;
         int total_sum = 0;
         // iterating aver all the rows of the factor and removing the collapsed parameter
         for (ArrayList<String> key : this.data.keySet().toArray(new ArrayList[0])) {
@@ -99,7 +99,7 @@ public class Factor {
             // if this is the second time we see this key we add the values to the previous one
             if (new_data.containsKey(temp_key)) {
                 new_data.put(temp_key, new_data.get(temp_key) + val);
-                total_sum += val;
+                total_sum += 1;
             } else { // otherwise we create a new key with the first met value
                 new_data.put(temp_key, val);
             }

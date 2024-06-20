@@ -28,8 +28,7 @@ public class VariableElimination {
         Factor result = this.eliminate_variables(network);
         System.out.println("Result : " + result);
 
-        // normalizing the result
-        Normalizing_factor(result);
+
 
         // creating a key to get the result from the hash map
         ArrayList<String> key = new ArrayList<>();
@@ -43,6 +42,7 @@ public class VariableElimination {
         BayesBall my_algo = new BayesBall();
         for (int i = 0; i < this.RelevantNodes.size(); ) {
             NetNode node = this.RelevantNodes.get(i);
+            System.out.println("Bayes ball");
             if (!my_algo.BayesBallRecursive(node, this.QueryNode, node, true, true)) {
                 this.RelevantNodes.remove(node);
             } else {
@@ -50,13 +50,17 @@ public class VariableElimination {
             }
             network.ResetNetwork();
         }
+        System.out.println("The relevant nodes are :" + this.RelevantNodes);
     }
 
-    private static void Normalizing_factor(Factor result) {
+    private void Normalizing_factor(Factor result) {
+//        System.out.println("Normalizing the factor :" + result);
         float sum = 0;
+        this.total_sum += result.data.size() -1;
         for (ArrayList<String> key : result.data.keySet()) {
             sum += result.data.get(key);
         }
+//        System.out.println(this.total_sum + "sums");
         for (ArrayList<String> key : result.data.keySet()) {
             result.data.put(key, result.data.get(key) / sum);
         }
@@ -67,14 +71,30 @@ public class VariableElimination {
         // First step - reducing the variables by evidences
         this.given_reduction();
 
+        this.total_sum = 0;
+        this.total_mult = 0;
+        int total = 0;
+        for (NetNode node : this.RelevantNodes){
+            if (node.factor.title.contains(this.QueryNode)){
+                total ++;
+            }
+        }
+        if (total == 1 && this.QueryNode.factor.data.size() == 2) {
+            System.out.println("The query is already computed");
+            return this.QueryNode.factor;
+        }
+
         // Second step - reducing the variables by hidden variables
-        return this.hidden_reduction();
+        Factor result = this.hidden_reduction();
+
+        // Third step returning the Normalized output
+        Normalizing_factor(result);
+        return result;
 
     }
 
     private Factor hidden_reduction() {
         // Get all the nodes cpt variables
-        boolean first = true;
         ArrayList<Factor> factors = this.get_relevant_factors(); // the list containing all the factors that are relevant to the query
         // print all factors titles
         System.out.println("Factors : ");
@@ -82,24 +102,33 @@ public class VariableElimination {
             System.out.println("Factor : " + f);
         }
         ArrayList<Factor> temp_factors; // the list containing all the factors that contains the wanted parameter
-        for (NetNode node : this.RelevantNodes) { // for each hidden node
-            if (this.HiddenNodes.contains(node)) { // if the hidden node his still relevant to the query
-                System.out.println("Node name : " + node.name);
-                // Get all the Factors containing the node name
-                temp_factors = this.get_relevant_factors(node, factors);
-                // sort the factors by ASCII values
-                Comparator<Factor> comp = new FactorComparator();
-                temp_factors.sort(comp);
-                // Join the factors
-                Factor last_factor = this.join(temp_factors, node, factors);
-                // Reduce the factor
-                this.total_sum += last_factor.reduce(node);
+        for (NetNode node : this.HiddenNodes) { // for each hidden node
+//            if (this.RelevantNodes.contains(node)) { // if the hidden node his still relevant to the query
+            System.out.println("eliminating name : " + node.name);
+            // Get all the Factors containing the node name
+            temp_factors = this.get_relevant_factors(node, factors);
+            System.out.println("Current factors" + temp_factors);
+            // sort the factors by their size
+            Comparator<Factor> comp = new FactorComparator();
+            temp_factors.sort(comp);
+            // Join the factors
+            Factor last_factor = this.join(temp_factors, node, factors);
+            // Reduce the factor
+            System.out.println("refactoring :" + last_factor);
+            System.out.println(total_sum + "sums before reducing " + last_factor);
+            if (last_factor != null) {
+                if (last_factor.title.size() != 1) {
+                    this.total_sum += last_factor.reduce(node);
+                } else {
+                    factors.remove(last_factor);
+                }
             }
+            System.out.println(total_sum + "sums after reducing " + last_factor);
         }
 
         this.join(factors, this.QueryNode, factors);
 
-        System.out.println("there is " + factors.size()+ " factors");
+//        System.out.println("there is " + factors.size()+ " factors");
         for (Factor f : factors) {
             System.out.println("Final Factor : " + f);
         }
@@ -108,9 +137,13 @@ public class VariableElimination {
 
     private Factor join(ArrayList<Factor> factors, NetNode node, ArrayList<Factor> all_factors) {
 
-        if (factors.size() <= 1) {
-            all_factors.add(factors.get(0));
-            System.out.println("Returned factor"+factors.get(0));
+        if (factors.isEmpty()){
+            return null;
+        }
+        if (factors.size() == 1) {
+            if (!all_factors.contains(factors.get(0))){
+                all_factors.add(factors.get(0));
+            }
             return factors.get(0);
         }
         // get the first and second factors
@@ -136,31 +169,37 @@ public class VariableElimination {
         for (NetNode param : first.title) {
             matching_values.add(second.title.indexOf(param));
         }
+        System.out.println(matching_values);
 
         Factor newFactor = new Factor(first, second);
         // iterating over all the values of the first factor
         for (ArrayList<String> key : first.data.keySet()) {
             // Find the matching rows of the second factor
             for (ArrayList<String> key2 : second.data.keySet()) {
+                boolean match = true;
                 for (int i = 0; i < matching_values.size(); i++) {
                     if (matching_values.get(i) == -1) {
                         continue;
                     }
                     String value1 = key.get(i); // The value of the joined parameter in the first factor
                     String value2 = key2.get(matching_values.get(i)); // The value of the joined parameter in the second factor
-                    if (!value1.equals(value2)) { // if the rows are not matching
-                    } else { // if the rows are matching we can multiply the values into the new factor
-                        ArrayList<String> new_key = create_new_key(key, key2, first, second, newFactor);
-                        newFactor.data.put(new_key, first.data.get(key) * second.data.get(key2));
-                        this.total_mult++;
+
+                    if (!value1.equals(value2)) {// if the rows are matching we can multiply the values into the new factor
+                        match = false;
+                        break;
                     }
+                }
+
+                if (match){ // if the whole row matches
+                    ArrayList<String> new_key = create_new_key(key, key2, first, second, newFactor);
+                    newFactor.data.put(new_key, first.data.get(key) * second.data.get(key2));
+                    this.total_mult++;
                 }
             }
         }
         // New factor list with the new one instead of the two old ones
         ArrayList<Factor> new_factors = new ArrayList<>();
         new_factors.add(newFactor);
-//        all_factors.add(newFactor);
         for (int i = 2; i < factors.size(); i++) {
             new_factors.add(factors.get(i));
         }

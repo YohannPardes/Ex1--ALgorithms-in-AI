@@ -53,10 +53,10 @@ public class NetNode {
     }
 
     public void collapse_given(NetNode node, String givenVal){
-        System.out.println("Collapsing on node :"+node.name);
-        System.out.println("Before collapsing the node :" + this.factor);
+//        System.out.println("Collapsing on node :"+node.name);
+//        System.out.println("Before collapsing the node :" + this.factor);
         this.factor.updateGiven(givenVal, node);
-        System.out.println("After collapsing the node :" + this.factor);
-        System.out.println(this.factor.data.toString());
+//        System.out.println("After collapsing the node :" + this.factor);
+//        System.out.println(this.factor.data.toString());
     }
 }

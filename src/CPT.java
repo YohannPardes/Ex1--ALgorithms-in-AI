@@ -3,15 +3,11 @@ import java.util.Arrays;
 public class CPT {
     Float[] values;
     Float[] computed_values;
-    Factor factor;
+
     /**
      * Given a string of the format "xxx xxx xx x xxx"
      * Build the right CPT
      */
-    CPT(){
-
-    }
-
     public void extracting_values_from_String(String str){
         String[] STRlist = str.split(" ");
         this.values = new Float[STRlist.length];

@@ -7,35 +7,55 @@ public class Factor {
     ArrayList<NetNode> title;
 
     /**
-     * Given a node create the factor data
-     *
+     * Given a node create the factor
      * @param node
      */
     Factor(NetNode node) {
+        // Adding the node the to factor title and all the node parents
         this.title = (ArrayList<NetNode>) node.Parents.clone();
         this.title.add(node);
 
+        // Creating the data of the factor
+        // computing the total number of iterations
         int total_iterations = 1;
         for (NetNode parent : node.Parents) {
             total_iterations *= parent.nb_outcomes;
         }
         total_iterations *= node.nb_outcomes;
 
+        // iterating over all the possible values of the factor
         ArrayList<NetNode> nodes_to_iterate = (ArrayList<NetNode>) node.Parents.clone();
         nodes_to_iterate.add(node);
-        for (int i = 0; i < total_iterations; i++) { // Iterate over all the possible
-            ArrayList<String> current_values = new ArrayList<>();
-            int divisor = 1;
-            for (NetNode parent : nodes_to_iterate) {
-                divisor *= parent.nb_outcomes;
-                int computed_index = (i / (total_iterations / divisor)) % parent.nb_outcomes;
-                current_values.add(parent.outcome_list.get(computed_index)); // add the right parent outcome
-            }
+        for (int i = 0; i < total_iterations; i++) { // Iterate over all the values of the factor
+            ArrayList<String> key = getNewKey(nodes_to_iterate, i, total_iterations);
             // add the node value
-            this.data.put(current_values, node.CPT.values[i]);
+            this.data.put(key, node.CPT.values[i]);
         }
     }
 
+    /**
+     * This function creates the key of the factor
+     * @param nodes_to_iterate the nodes to iterate over
+     * @param i the current iteration
+     * @param total_iterations the total number of iterations
+     * @return  the key of the factor
+     */
+    private static ArrayList<String> getNewKey(ArrayList<NetNode> nodes_to_iterate, int i, int total_iterations) {
+        ArrayList<String> created_key = new ArrayList<>();
+        int divisor = 1; // used to compute the index of the parent outcome
+        for (NetNode parent : nodes_to_iterate) {
+            divisor *= parent.nb_outcomes;
+            int computed_index = (i / (total_iterations / divisor)) % parent.nb_outcomes;
+            created_key.add(parent.outcome_list.get(computed_index)); // add the right parent outcome
+        }
+        return created_key;
+    }
+
+    /**
+     * This function creates a factor from two factors
+     * @param first the first factor
+     * @param second the second factor
+     */
     public Factor(Factor first, Factor second) {
         // get all the parameter of the new factor
         this.title = (ArrayList<NetNode>) first.title.clone();
@@ -63,9 +83,9 @@ public class Factor {
     }
 
     /**
-     * This function updates the factor by deletting the given values
-     *
-     * @param value
+     * This function updates the factor by deleting the given values
+     * @param value the value to delete
+     * @param node the node to delete
      */
     public void updateGiven(String value, NetNode node) {
         int index = 0;
@@ -82,11 +102,16 @@ public class Factor {
         this.title.remove(node);
     }
 
+    /**
+     * This function reduces the factor by removing the node
+     * @param node the node to remove
+     * @return the number of times the node was found
+     */
     public int reduce(NetNode node) {
 
         // creating new key
-        ArrayList<String> new_key = new ArrayList<>();
-        int index = this.title.indexOf(node);
+        int index = this.title.indexOf(node); // get the index of the node that we want to remove
+
         HashMap<ArrayList<String>, Float> new_data = new HashMap<>();
         ArrayList<String> temp_key;
         int total_sum = 0;

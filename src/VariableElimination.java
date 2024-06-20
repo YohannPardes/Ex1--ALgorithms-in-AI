@@ -19,60 +19,64 @@ public class VariableElimination {
         network.given_update(query);
 
         // First step - getting rid of the non-parent of query or evidence nodes
-        this.eliminate_useless_nodes(network);
+        this.eliminate_useless_nodes();
 
         // Second step - Keeping only relevant nodes using bayes ball
         bayesBallElimination(network);
 
         // Third step - Actually eliminating the variables
-        Factor result = this.eliminate_variables(network);
-        System.out.println("Result : " + result);
-
-
+        Factor result = this.eliminate_variables();
 
         // creating a key to get the result from the hash map
         ArrayList<String> key = new ArrayList<>();
         key.add(this.QueryVal);
 
-
+        // returning the result
         return result.data.get(key);
     }
 
+    /**
+     * Eliminate the irrelevant nodes using the bayes ball algorithm
+     * @param network the network to eliminate the irrelevant nodes from
+     */
     private void bayesBallElimination(Network network) {
-        BayesBall my_algo = new BayesBall();
+        BayesBall my_algo = new BayesBall(); // the bayes ball algorithm to eliminate the irrelevant nodes
         for (int i = 0; i < this.RelevantNodes.size(); ) {
             NetNode node = this.RelevantNodes.get(i);
-            System.out.println("Bayes ball");
             if (!my_algo.BayesBallRecursive(node, this.QueryNode, node, true, true)) {
                 this.RelevantNodes.remove(node);
             } else {
                 i++;
             }
-            network.ResetNetwork();
+            network.ResetNetwork(); // reset the network for the next iteration of bayes ball
         }
-        System.out.println("The relevant nodes are :" + this.RelevantNodes);
     }
 
+    /**
+     * Normalize the factor to have a sum of probabilities equal to 1
+     * @param result the factor to normalize
+     */
     private void Normalizing_factor(Factor result) {
-//        System.out.println("Normalizing the factor :" + result);
         float sum = 0;
         this.total_sum += result.data.size() -1;
         for (ArrayList<String> key : result.data.keySet()) {
             sum += result.data.get(key);
         }
-//        System.out.println(this.total_sum + "sums");
         for (ArrayList<String> key : result.data.keySet()) {
             result.data.put(key, result.data.get(key) / sum);
         }
     }
 
-    private Factor eliminate_variables(Network network) {
+    /**
+     * Eliminate the variables using the variable elimination algorithm
+     * @return the factor containing the result
+     */
+    private Factor eliminate_variables() {
 
         // First step - reducing the variables by evidences
         this.given_reduction();
 
-        this.total_sum = 0;
-        this.total_mult = 0;
+        // Checking if the query is already computed
         int total = 0;
         for (NetNode node : this.RelevantNodes){
             if (node.factor.title.contains(this.QueryNode)){
@@ -80,7 +84,6 @@ public class VariableElimination {
             }
         }
         if (total == 1 && this.QueryNode.factor.data.size() == 2) {
-            System.out.println("The query is already computed");
             return this.QueryNode.factor;
         }
 
@@ -93,29 +96,24 @@ public class VariableElimination {
 
     }
 
+    /**
+     * Reduce the hidden variables one by one
+     * @return the factor containing the result
+     */
     private Factor hidden_reduction() {
         // Get all the nodes cpt variables
         ArrayList<Factor> factors = this.get_relevant_factors(); // the list containing all the factors that are relevant to the query
-        // print all factors titles
-        System.out.println("Factors : ");
-        for (Factor f : factors) {
-            System.out.println("Factor : " + f);
-        }
         ArrayList<Factor> temp_factors; // the list containing all the factors that contains the wanted parameter
+
         for (NetNode node : this.HiddenNodes) { // for each hidden node
-//            if (this.RelevantNodes.contains(node)) { // if the hidden node his still relevant to the query
-            System.out.println("eliminating name : " + node.name);
             // Get all the Factors containing the node name
             temp_factors = this.get_relevant_factors(node, factors);
-            System.out.println("Current factors" + temp_factors);
             // sort the factors by their size
             Comparator<Factor> comp = new FactorComparator();
             temp_factors.sort(comp);
-            // Join the factors
-            Factor last_factor = this.join(temp_factors, node, factors);
-            // Reduce the factor
-            System.out.println("refactoring :" + last_factor);
-            System.out.println(total_sum + "sums before reducing " + last_factor);
+            // Join the factors recursively
+            Factor last_factor = this.join(temp_factors, factors);
+            // Reduce the remaining factor
             if (last_factor != null) {
                 if (last_factor.title.size() != 1) {
                     this.total_sum += last_factor.reduce(node);
@@ -123,23 +121,25 @@ public class VariableElimination {
                     factors.remove(last_factor);
                 }
             }
-            System.out.println(total_sum + "sums after reducing " + last_factor);
         }
 
-        this.join(factors, this.QueryNode, factors);
-
-//        System.out.println("there is " + factors.size()+ " factors");
-        for (Factor f : factors) {
-            System.out.println("Final Factor : " + f);
-        }
+        this.join(factors, factors); // last join with the query node
         return factors.get(0); // return the last factor containing the query variable
     }
 
-    private Factor join(ArrayList<Factor> factors, NetNode node, ArrayList<Factor> all_factors) {
+    /**
+     * Join the factors recursively
+     * @param factors the list of factors to join
+     * @param all_factors the list of all the factors
+     * @return the new factor
+     */
+    private Factor join(ArrayList<Factor> factors, ArrayList<Factor> all_factors) {
 
+        // if there is no factor left
         if (factors.isEmpty()){
             return null;
         }
+        // if there is only one factor left
         if (factors.size() == 1) {
             if (!all_factors.contains(factors.get(0))){
                 all_factors.add(factors.get(0));
@@ -161,15 +161,11 @@ public class VariableElimination {
             second = temp;
         }
 
-        System.out.println("First factor : " + first);
-        System.out.println("Second factor : " + second);
-
-        // get the corresponding values of parameter 1 at the second factor
+        // get the corresponding values of common parameters
         ArrayList<Integer> matching_values = new ArrayList<>();
         for (NetNode param : first.title) {
             matching_values.add(second.title.indexOf(param));
         }
-        System.out.println(matching_values);
 
         Factor newFactor = new Factor(first, second);
         // iterating over all the values of the first factor
@@ -178,7 +174,7 @@ public class VariableElimination {
             for (ArrayList<String> key2 : second.data.keySet()) {
                 boolean match = true;
                 for (int i = 0; i < matching_values.size(); i++) {
-                    if (matching_values.get(i) == -1) {
+                    if (matching_values.get(i) == -1) { // if the parameter is not in the second factor
                         continue;
                     }
                     String value1 = key.get(i); // The value of the joined parameter in the first factor
@@ -203,10 +199,13 @@ public class VariableElimination {
         for (int i = 2; i < factors.size(); i++) {
             new_factors.add(factors.get(i));
         }
-        System.out.println("New factor : " + newFactor);
-        return join(new_factors, node, all_factors);
+        return join(new_factors, all_factors);
     }
 
+    /**
+     * Get all the factors that are relevant to the query
+     * @return the list of the factors that are relevant to the query
+     */
     private ArrayList<Factor> get_relevant_factors() {
         ArrayList<Factor> relevant_factors = new ArrayList<>();
         for (NetNode n : this.RelevantNodes) {
@@ -217,6 +216,12 @@ public class VariableElimination {
             return relevant_factors;
     }
 
+    /**
+     * Get all the factors that are relevant to the query
+     * @param node the node that we want to get the factors for
+     * @param factors the list of all the factors
+     * @return the list of the factors that are relevant to the node
+     */
     private ArrayList<Factor> get_relevant_factors(NetNode node, ArrayList<Factor> factors) {
         ArrayList<Factor> relevant_factors = new ArrayList<>();
         for (Factor f : factors) {
@@ -242,61 +247,55 @@ public class VariableElimination {
         }
     }
 
+    /**
+     * Process the query string and extract the variables
+     * @param network the network
+     * @param query the query string
+     */
     private void ProcessQueryString(Network network, String query) {
-        String paramString = query.split("\\(")[1];
-        String HiddenVar = paramString.split("\\)")[1];
-        paramString = paramString.split("\\)")[0];
+        String paramString = query.split("\\(")[1]; //P(A=T|B=T,C=F) E-M -> A|B=T,C=F) E-M
+        String HiddenVar = paramString.split("\\)")[1]; // -> E-M
+        paramString = paramString.split("\\)")[0]; // -> A=T|B=T,C=F
         String GivenVar = "";
-        if (paramString.split("\\|").length == 2){
-            GivenVar = paramString.split("\\|")[1];
+        if (paramString.split("\\|").length == 2){ // if there is a given variable
+            GivenVar = paramString.split("\\|")[1]; // -> B=T,C=F
         }
-        paramString = paramString.split("\\|")[0];
-        String QueryVar = paramString.split("=")[0];
-        String QueryVal = paramString.split("=")[1];
+        paramString = paramString.split("\\|")[0]; // -> A=T
+        String QueryVar = paramString.split("=")[0]; // -> A
+        String QueryVal = paramString.split("=")[1]; // -> T
 
-        System.out.println("QueryVal - " + QueryVal);
-        System.out.println("HiddenVar - " + HiddenVar);
-        System.out.println("QueryVar - " + QueryVar);
-        System.out.println("GivenVar - " + GivenVar);
-
+        // Assigning the variable and the value
         this.QueryNode = network.find_node(QueryVar);
         this.QueryVal = QueryVal;
 
-
+        // Assigning the hidden and given variables
         for (String hidden : HiddenVar.split("-")) {
             this.HiddenNodes.add(network.find_node(hidden.trim()));
         }
 
         for (String given : GivenVar.split(",")) {
-            if (given.equals("")) {
+            if (given.isEmpty()) {
                 break;
             }
             this.GivenNodes.add(network.find_node(given.split("=")[0]));
             this.GivenVals.add(given.split("=")[1]);
         }
-        for (NetNode node : this.GivenNodes) {
-            System.out.println("Given node : " + node.name);
-        }
-
-        for (NetNode node : this.HiddenNodes) {
-            System.out.println("Hidden node : " + node.name);
-        }
-
-
     }
 
     /**
      * Eliminate the nodes that are not a parent of the query node or a given node
-     *
-     * @param network
      */
-    private void eliminate_useless_nodes(Network network) {
+    private void eliminate_useless_nodes() {
         for (NetNode node : this.GivenNodes) {
             eliminate_useless_nodes_recursive(node);
         }
         eliminate_useless_nodes_recursive(this.QueryNode);
     }
 
+    /**
+     * The recursive part of eliminate_useless_nodes
+     * @param node the node to eliminate
+     */
     private void eliminate_useless_nodes_recursive(NetNode node) {
         if (!this.RelevantNodes.contains(node)) {
             this.RelevantNodes.add(node);
@@ -307,6 +306,15 @@ public class VariableElimination {
         }
     }
 
+    /**
+     * Create a new key for the new factor
+     * @param key the key of the first factor
+     * @param key2 the key of the second factor
+     * @param first the first factor
+     * @param second the second factor
+     * @param newFactor the new factor
+     * @return  the new key
+     */
     private ArrayList<String> create_new_key(ArrayList<String> key, ArrayList<String> key2, Factor first, Factor second, Factor newFactor) {
         ArrayList<String> new_key = new ArrayList<>();
         // iterating aver all the parameters of the new factor
@@ -328,6 +336,8 @@ public class VariableElimination {
         this.GivenVals = new ArrayList<>();
         this.QueryNode = null;
         this.QueryVal = null;
+        this.total_sum = 0;
+        this.total_mult = 0;
     }
 }
 

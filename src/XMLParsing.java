@@ -14,7 +14,6 @@ import java.io.IOException;
 public class XMLParsing {
 
     void extract_data(String path, Network created_network){
-        System.out.println(path);
         created_network.inputFile = path;
         try {
             File file = new File(path);
@@ -29,7 +28,7 @@ public class XMLParsing {
             extract_CPT("DEFINITION", document, created_network);
 
             // updating the network graph for parents, child relation
-            created_network.Update_childs();
+            created_network.Update_children();
             created_network.create_factors();
 
         } catch(ParserConfigurationException e){

@@ -16,7 +16,6 @@ public class BayesBall {
     }
 
     public boolean BayesBallRecursive(NetNode current_node, NetNode goal_node, NetNode previous_node, boolean from_parent, boolean first_call) {
-        System.out.println("current node: " + current_node.name + " goal node: " + goal_node.name + " from parent: " + from_parent + " first call: " + first_call);
         // Stopping cases
         // If we reached the goal node
         if (current_node == goal_node) {
@@ -64,7 +63,7 @@ public class BayesBall {
         else {
             // if we came from a parent node
             if (from_parent) {
-                // we go over all the childs of the current node
+                // we go over all the children of the current node
                 for (NetNode child : current_node.Childs) {
                     returned_val = returned_val || this.BayesBallRecursive(child, goal_node, current_node, true, false);
                 }

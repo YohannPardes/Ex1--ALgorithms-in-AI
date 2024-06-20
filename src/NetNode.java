@@ -14,10 +14,18 @@ public class NetNode {
     Factor factor;
     ArrayList<String> outcome_list = new ArrayList<>();
 
+    /**
+     * Constructor of the class
+     * @param name
+     */
     public NetNode(String name){
         this.name = name;
     }
 
+    /**
+     * This function is used add an outcome to the node
+     * @param outcome the outcome to add
+     */
     public void add_outcome(String outcome){
         outcomes.put(outcome, this.nb_outcomes);
         this.outcome_list.add(outcome);
@@ -38,13 +46,15 @@ public class NetNode {
             System.out.print(child.name+ ", ");
         }
         System.out.println("\nI have :"+this.nb_outcomes+" outcomes");
-        System.out.println("and here they are " + outcomes.toString());
-        System.out.println("");
+        System.out.println("and here they are " + outcomes.toString() + "\n");
         return "";
 
     }
 
-    public void childs_update() {
+    /**
+     * This function update all the children of the parents node
+     */
+    public void children_update() {
         for (NetNode parent : this.Parents){
             if (!parent.Childs.contains(this)){
                 parent.Childs.add(this);
@@ -52,11 +62,10 @@ public class NetNode {
         }
     }
 
+    /**
+     * This function is used to update the factor of the node
+     */
     public void collapse_given(NetNode node, String givenVal){
-//        System.out.println("Collapsing on node :"+node.name);
-//        System.out.println("Before collapsing the node :" + this.factor);
         this.factor.updateGiven(givenVal, node);
-//        System.out.println("After collapsing the node :" + this.factor);
-//        System.out.println(this.factor.data.toString());
     }
 }

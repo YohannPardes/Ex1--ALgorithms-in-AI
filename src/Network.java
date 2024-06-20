@@ -19,15 +19,15 @@ public class Network {
         return null;
     }
 
-    public void Update_childs() {
+    public void Update_children() {
         for (NetNode node : this.nodes) {
-            node.childs_update();
+            node.children_update();
         }
     }
 
     /**
      * This function updates the given nodes in the network
-     * @param query
+     * @param query - The current query as a string
      */
     void given_update(String query) {
         // extracting the Given part
@@ -41,7 +41,6 @@ public class Network {
             if (given.isEmpty()) {
                 break;
             }
-            System.out.println("Given part: " + given);
             String node = given.split("=")[0];
             String value = given.split("=")[1];
             value = value.split("\\)")[0];
@@ -58,7 +57,7 @@ public class Network {
         }
     }
 
-    public void HardReset(VariableElimination VE, BayesBall BB){
+    public void HardReset(VariableElimination VE){
         for (NetNode node : this.nodes){
             node.given = false;
             node.Given_outcome = "";
@@ -69,11 +68,9 @@ public class Network {
             node.factor = null;
             node.factor = new Factor(node);
         }
-
         VE.reset();
-
     }
-
+    
     public void create_factors() {
         for (NetNode node : this.nodes) {
             node.factor = new Factor(node);
